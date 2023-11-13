@@ -1,0 +1,10 @@
+VAR
+    A, B, C: INTEGER;
+BEGIN
+    A = 10;
+    B = (A + 5) * 2;
+    READ(B, C);
+    FOR X = 1 TO 5 DO
+        WRITE(X);
+    END_FOR
+END
