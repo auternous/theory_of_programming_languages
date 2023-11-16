@@ -1,9 +1,8 @@
 import re
 
-# Спецификации для лексического анализа
 specifications = [
-    # Пробельные символы
-    (re.compile(r'^\s+'), None),
+    # Пробельные символы (включая пробелы и новые строки)
+    (re.compile(r'[ ^\s+]+'), None),
 
     # Символы, разделители
     (re.compile(r'^;'), ";"),
@@ -13,16 +12,16 @@ specifications = [
     (re.compile(r'^:'), ":"),
 
     # Ключевые слова
-    (re.compile(r'^\b(var|VAR)\b'), "VAR"),
-    (re.compile(r'^\b(begin|BEGIN)\b'), "BEGIN"),
-    (re.compile(r'^\b(end|END)\b'), "END"),
-    (re.compile(r'^\b(integer|INTEGER)\b'), "INTEGER"),
-    (re.compile(r'^\b(read|READ)\b'), "READ"),
-    (re.compile(r'^\b(write|WRITE)\b'), "WRITE"),
-    (re.compile(r'^\b(for|FOR)\b'), "FOR"),
-    (re.compile(r'^\b(to|TO)\b'), "TO"),
-    (re.compile(r'^\b(do|DO)\b'), "DO"),
-    (re.compile(r'^\b(end_for|END_FOR)\b'), "END_FOR"),
+    (re.compile(r'^(var|VAR)\b'), "VAR"),
+    (re.compile(r'^(begin|BEGIN)\b'), "BEGIN"),
+    (re.compile(r'^(end|END)\b'), "END"),
+    (re.compile(r'^(integer|INTEGER)\b'), "INTEGER"),
+    (re.compile(r'^(read|READ)\b'), "READ"),
+    (re.compile(r'^(write|WRITE)\b'), "WRITE"),
+    (re.compile(r'^(for|FOR)\b'), "FOR"),
+    (re.compile(r'^(to|TO)\b'), "TO"),
+    (re.compile(r'^(do|DO)\b'), "DO"),
+    (re.compile(r'^(end_for|END_FOR)\b'), "END_FOR"),
 
     # Числа
     (re.compile(r'^\d+'), "NUMBER"),
@@ -40,13 +39,16 @@ specifications = [
     (re.compile(r'^[+\-]'), "ADDITIVE_OPERATOR"),
     (re.compile(r'^[*\/]'), "MULTIPLICATIVE_OPERATOR"),
 ]
+input_text = "VAR x: INTEGER; BEGIN x = 10; FOR i TO 5 DO WRITE(i * 2); END_FOR END"
 
-# Пример использования:
-input_text = "VAR x: INTEGER; BEGIN x = 10; END"
+# Initial position in the input text
 input_position = 0
 
+# Lexer loop
+# Inside the while loop
 while input_position < len(input_text):
     for pattern, token_type in specifications:
+        print(f"Trying pattern: {pattern.pattern}")
         match = pattern.match(input_text, input_position)
         if match:
             value = match.group()
@@ -54,3 +56,5 @@ while input_position < len(input_text):
             if token_type is not None:
                 print(f"Token: {token_type}, Value: {value}")
             break
+
+
