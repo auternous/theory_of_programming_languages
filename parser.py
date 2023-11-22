@@ -1,168 +1,110 @@
-from lexer import TokenLexer
+class Parser:
+    def __init__(self, lexer):
+        self.lexer = lexer
+        self.current_token = None
 
+    def parse_program(self):
+        program_body = []
+        while not self.lexer.is_end_of_file():
+            statement = self.parse_statement()
+            if statement:
+                program_body.append(statement)
+        return {"type": "Program", "body": program_body}
 
-class ExpressionParser:
-    def __init__(self):
-        self.input_string = ""
-        self.token_lexer = TokenLexer()
-        self.next_token = None
+    def parse_statement(self):
+        token_type = self.current_token["token_type"]
 
-    def consume_token(self, expected_token_type):
-        current_token = self.next_token
+        if token_type == "VAR":
+            return self.parse_variable_declaration()
 
-        if current_token is None:
-            raise SyntaxError(f"Unexpected end of input, expected => {expected_token_type}")
+        elif token_type == "BEGIN":
+            return self.parse_block_statement()
 
-        if isinstance(current_token, dict):
-            actual_token_type = current_token.get("token_type")
-            actual_token_value = current_token.get("value")
-            if actual_token_type != expected_token_type and actual_token_value != expected_token_type:
-                raise SyntaxError(f"Unexpected token => {actual_token_value}, expected => {expected_token_type}")
+        elif token_type == "READ":
+            return self.parse_read_statement()
+
+        elif token_type == "FOR":
+            return self.parse_for_statement()
+
+        elif token_type == "WRITE":
+            return self.parse_write_statement()
+
         else:
-            print(f"Unexpected token => {current_token}, expected => {expected_token_type}")
+            return self.parse_expression_statement()
 
-        self.next_token = self.token_lexer.fetch_next_token()
-
-        return current_token
-
-    def parse_expression(self, input_string):
-        self.input_string = input_string
-        self.token_lexer.reset_input(self.input_string)
-        self.next_token = self.token_lexer.fetch_next_token()
-        return self.program()
-
-    def program(self):
-        return {
-            "type": "Program",
-            "body": [
-                self.variable_declaration_list(),
-                self.statement_declaration_list(),
-            ],
-        }
-
-    def variable_declaration_list(self):
+    def parse_variable_declaration(self):
         self.consume_token("VAR")
-
-        variable_list = self.variable_list()
-
+        variable_list = self.parse_expression_list()  # Updated line
         self.consume_token("COLON")
         self.consume_token("INTEGER")
         self.consume_token("SEMICOLON")
+        return {"type": "VariableDeclarationList", "variableList": variable_list}
 
-        return {
-            "type": "VariableDeclarationList",
-            "variableList": variable_list,
-        }
+    def parse_expression_list(self):  # New method
+        expression_list = []
+        while self.current_token["token_type"] == "IDENTIFIER":
+            expression_list.append(self.parse_expression())  # Updated line
+            if self.current_token["token_type"] == "COMMA":
+                self.consume_token("COMMA")
+            else:
+                break
+        return expression_list
 
-    def variable_list(self):
-        variable_list = []
-
-        # Первая переменная
-        variable_list.append(self.variable_declaration())
-
-        # Проверка наличия запятой и обработка списка переменных
-        while self.next_token["token_type"] == "COMMA" and self.consume_token("COMMA"):
-            variable_list.append(self.variable_declaration())
-        print(variable_list)
-
-        return variable_list
-
-    def variable_declaration(self):
-        return self.identifier()
-
-    def identifier(self):
-        return {
-            "type": "IDENTIFIER",
-            "name": self.consume_token("IDENTIFIER")["value"],
-        }
-
-    def statement_declaration_list(self):
+    def parse_block_statement(self):
         self.consume_token("BEGIN")
-
-        statement_list = self.statement_list("END")
-
+        statement_list = self.parse_statement_list("END")
         self.consume_token("END")
+        return {"type": "BlockStatement", "body": statement_list}
 
-        return {
-            "type": "StatementDeclarationList",
-            "statementList": statement_list,
-        }
-
-    def statement_list(self, stop_statement_list=None):
+    def parse_statement_list(self, stop_token):
         statement_list = []
-        while self.next_token["token_type"] != stop_statement_list and self.next_token["token_type"] is not None:
-            statement_list.append(self.statement_declaration())
+        while self.current_token["token_type"] != stop_token and self.current_token["token_type"] is not None:
+            statement = self.parse_statement()
+            if statement:
+                statement_list.append(statement)
         return statement_list
 
-    def statement_declaration(self):
-        token_type = self.next_token["token_type"]
-
-        if token_type == "READ":
-            return self.read_statement()
-        elif token_type == "FOR":
-            return self.for_statement()
-        elif token_type == "WRITE":
-            return self.write_statement()
-        else:
-            return self.expression_statement()
-
-    def read_statement(self):
+    def parse_read_statement(self):
         self.consume_token("READ")
         self.consume_token("LEFT_PAREN")
-        variable_list = self.variable_list()
+        variable_list = self.parse_variable_list()
         self.consume_token("RIGHT_PAREN")
-        return {
-            "type": "ReadStatement",
-            "variableList": variable_list,
-        }
+        self.consume_token("SEMICOLON")
+        return {"type": "ReadStatement", "variableList": variable_list}
 
-    def for_statement(self):
+    def parse_for_statement(self):
         self.consume_token("FOR")
-        loop_initializer = self.expression()
-
+        loop_initializer = self.parse_expression()
         self.consume_token("TO")
-        constraint = self.expression()
-
+        constraint = self.parse_expression()
         self.consume_token("DO")
-        statement_list = self.statement_list("END_FOR")
-
+        statement_list = self.parse_statement_list("END_FOR")
         self.consume_token("END_FOR")
+        return {"type": "ForStatement", "loopInitializer": loop_initializer,
+                "constraint": constraint, "statementList": statement_list}
 
-        return {
-            "type": "ForStatement",
-            "loopInitializer": loop_initializer,
-            "constraint": constraint,
-            "statementList": statement_list,
-        }
-
-    def write_statement(self):
+    def parse_write_statement(self):
         self.consume_token("WRITE")
         self.consume_token("LEFT_PAREN")
-        variable_list = self.variable_list()
+        expression_list = self.parse_expression_list()  # Updated line
         self.consume_token("RIGHT_PAREN")
-        return {
-            "type": "WriteStatement",
-            "variableList": variable_list,
-        }
-
-    def expression_statement(self):
-        expression = self.expression()
         self.consume_token("SEMICOLON")
-        return {
-            "type": "ExpressionStatement",
-            "expression": expression,
-        }
+        return {"type": "WriteStatement", "expressionList": expression_list}  # Updated line
 
-    def expression(self):
-        return self.assignment_expression()
+    def parse_expression_statement(self):
+        expression = self.parse_expression()
+        self.consume_token("SEMICOLON")
+        return {"type": "ExpressionStatement", "expression": expression}
 
-    def assignment_expression(self):
-        left = self.additive_expression()
+    def parse_expression(self):
+        return self.parse_assignment_expression()
 
-        is_assignment_operator = lambda t: t == "ASSIGNMENT_OPERATOR"
-        while is_assignment_operator(self.next_token["token_type"]):
+    def parse_assignment_expression(self):
+        left = self.parse_additive_expression()
+
+        while self.current_token["token_type"] == "ASSIGNMENT_OPERATOR":
             operator = self.consume_token("ASSIGNMENT_OPERATOR")["value"]
-            right = self.additive_expression()
+            right = self.parse_additive_expression()
 
             left = {
                 "type": "AssignmentExpression",
@@ -171,48 +113,95 @@ class ExpressionParser:
                 "right": right,
             }
 
-            return left
+        return left
 
-        def check_valid_assignment_target(node):
-            if node["type"] == "IDENTIFIER":
-                operator = self.consume_token("ASSIGNMENT_OPERATOR")["value"]
-                return {
-                    "type": "AssignmentExpression",
-                    "operator": operator,
-                    "left": node,
-                    "right": self.additive_expression(),
-                }
-            raise SyntaxError("Invalid left-hand side in assignment expression")
+    def parse_additive_expression(self):
+        return self.parse_binary_expression("parse_multiplicative_expression", "ADDITIVE_OPERATOR")
 
-        return check_valid_assignment_target(left)
+    def parse_multiplicative_expression(self):
+        return self.parse_binary_expression("parse_unary_expression", "MULTIPLICATIVE_OPERATOR")
 
-    def binary_expression(self, builder_name, operator_token):
-        left = getattr(self, builder_name)()
-        while self.next_token["token_type"] == operator_token:
+    def parse_unary_expression(self):
+        operator = None
+
+        if self.current_token["token_type"] == "ADDITIVE_OPERATOR":
+            operator = self.consume_token("ADDITIVE_OPERATOR")["value"]
+
+        if operator is not None:
+            return {
+                "type": "UnaryExpression",
+                "operator": operator,
+                "argument": self.parse_unary_expression(),
+            }
+
+        return self.parse_primary_expression()
+
+    def parse_primary_expression(self):
+        if self.current_token["token_type"] == "NUMBER":
+            return self.parse_literal()
+
+        token_type = self.current_token["token_type"]
+        if token_type == "LEFT_PAREN":
+            return self.parse_parenthesized_expression()
+        elif token_type == "IDENTIFIER":
+            return self.parse_identifier()
+        else:
+            return self.parse_primary_expression()
+
+    def parse_parenthesized_expression(self):
+        self.consume_token("LEFT_PAREN")
+        expression = self.parse_expression()
+        self.consume_token("RIGHT_PAREN")
+        return expression
+
+    def parse_literal(self):
+        return self.parse_numeric_literal()
+
+    def parse_numeric_literal(self):
+        number = self.consume_token("NUMBER")["value"]
+        return {
+            "type": "NumericLiteral",
+            "value": int(number),
+        }
+
+    def parse_identifier(self):
+        return {
+            "type": "Identifier",
+            "name": self.consume_token("IDENTIFIER")["value"],
+        }
+
+    def parse_binary_expression(self, subexpression_parser, operator_token):
+        left = getattr(self, subexpression_parser)()
+
+        while self.current_token["token_type"] == operator_token:
             operator = self.consume_token(operator_token)["value"]
-            right = getattr(self, builder_name)()
+            right = getattr(self, subexpression_parser)()
+
             left = {
                 "type": "BinaryExpression",
                 "operator": operator,
                 "left": left,
                 "right": right,
             }
+
         return left
 
-    def additive_expression(self):
-        return self.binary_expression("multiplicative_expression", "ADDITIVE_OPERATOR")
+    def consume_token(self, expected_token_type):
+        current_token = self.current_token
 
-    def multiplicative_expression(self):
-        return self.binary_expression("unary_expression", "MULTIPLICATIVE_OPERATOR")
+        if current_token is None:
+            raise SyntaxError(f"Unexpected end of input, expected => {expected_token_type}")
 
-    def unary_expression(self):
-        operator = None
+        if isinstance(current_token, dict):
+            actual_token_type = current_token.get("token_type")
+            actual_token_value = current_token.get("value")
+            if actual_token_type != expected_token_type:
+                raise SyntaxError(
+                    f"Unexpected token => {actual_token_type}, value =>"
+                    f" {actual_token_value}, expected => {expected_token_type}")
+        else:
+            raise SyntaxError(f"Unexpected token => {current_token}, expected => {expected_token_type}")
 
-        if self.next_token["token_type"] == "ADDITIVE_OPERATOR":
-            operator = self.consume_token("ADDITIVE_OPERATOR")["value"]
+        self.current_token = self.lexer.fetch_next_token()
 
-        if operator is not None:
-            return {
-                "type": "UnaryExpression",
-                "operator": operator
-            }
+        return current_token

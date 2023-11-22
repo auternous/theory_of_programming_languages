@@ -59,7 +59,7 @@ specifications = [
     (re.compile(r'[a-zA-Z]+'), "IDENTIFIER"),
     (re.compile(r'='), "ASSIGNMENT_OPERATOR"),
     (re.compile(r'[+\-]'), "ADDITIVE_OPERATOR"),
-    (re.compile(r'[*\/]'), "MULTIPLICATIVE_OPERATOR"),
+    (re.compile(r'\*'), "MULTIPLICATIVE_OPERATOR"),
     (re.compile(r'\s'), None)
 ]
 
