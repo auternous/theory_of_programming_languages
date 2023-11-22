@@ -165,9 +165,15 @@ class Parser:
         }
 
     def parse_identifier(self):
+        identifier_token = self.consume_token("IDENTIFIER")
+        identifier_name = identifier_token["value"]
+
+        if len(identifier_name) > 8:
+            raise SyntaxError(f"Identifier '{identifier_name}' exceeds the maximum length of 8 characters")
+
         return {
             "type": "Identifier",
-            "name": self.consume_token("IDENTIFIER")["value"],
+            "name": identifier_name,
         }
 
     def parse_binary_expression(self, subexpression_parser, operator_token):

@@ -1,10 +1,11 @@
 from lexer import TokenLexer, specifications
 from parser import Parser
 from pprint import pprint
+from interpreter import Interpreter
 
 
 def main():
-    input_string = "VAR X: INTEGER; BEGIN X = 10; FOR i TO 5 DO WRITE(i + 2); END_FOR END"
+    input_string = "VAR X, I: INTEGER; BEGIN X = 10; FOR I TO 5 DO WRITE(I * 2); END_FOR END"
 
     lexer = TokenLexer()
     lexer.reset_input(input_string)
@@ -22,6 +23,11 @@ def main():
     result = parser.parse_program()
     print("\nParsed AST:")
     print(result)
+
+    print("\nOutput:")
+
+    interpreter = Interpreter()
+    interpreter.interpret(result)
 
 
 if __name__ == "__main__":
