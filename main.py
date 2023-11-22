@@ -7,7 +7,8 @@ from interpreter import Interpreter
 def main():
     input_string = ("VAR X, I: INTEGER;"
                     " BEGIN X = 10;"
-                    " FOR I TO 5 DO WRITE(I * 2);"
+                    " I = 0;"
+                    " FOR I TO 5 DO WRITE(I * X);"
                     " END_FOR"
                     " END")
 

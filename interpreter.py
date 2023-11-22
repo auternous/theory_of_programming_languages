@@ -1,9 +1,3 @@
-from typing import Any, List
-
-from lexer import TokenLexer
-from parser import Parser
-
-
 class Interpreter:
     def __init__(self):
         self.global_variables = {}
@@ -36,10 +30,58 @@ class Interpreter:
         elif statement_type == "ExpressionStatement":
             self.evaluate_expression(statement["expression"])
 
+    def evaluate(self, expression):
+        variable_list, statement_list = expression
+
+        self.define_variables(variable_list)
+        self.execute_statement(statement_list)
+
     def define_variables(self, variable_list):
         for variable_declaration in variable_list:
-            variable_name = variable_declaration["name"]
-            self.global_variables[variable_name] = 0
+            if variable_declaration["type"] == "AssignmentExpression":
+                variable_name = variable_declaration["left"]["name"]
+                initial_value = self.evaluate_expression(variable_declaration["right"])
+                self.global_variables[variable_name] = initial_value
+            else:
+                variable_name = variable_declaration["name"]
+                self.global_variables[variable_name] = 0
+
+    def evaluate_expression(self, expression):
+        if isinstance(expression, (int, float)):
+            return expression
+        elif isinstance(expression, str):
+            return self.global_variables.get(expression, 0)
+        elif isinstance(expression, dict):
+            expression_type = expression.get("type")
+
+            if expression_type == "NumericLiteral":
+                return expression["value"]
+            elif expression_type == "Identifier":
+                return self.global_variables.get(expression["name"], 0)
+            elif expression_type == "AssignmentExpression":
+                variable_name = expression["left"]["name"]
+                value = self.evaluate_expression(expression["right"])
+                self.global_variables[variable_name] = value
+                return value
+            elif expression_type == "BinaryExpression":
+                operator = expression["operator"]
+                left = self.evaluate_expression(expression["left"])
+                right = self.evaluate_expression(expression["right"])
+
+                if operator == "+":
+                    return left + right
+                elif operator == "-":
+                    return left - right
+                elif operator == "*":
+                    return left * right
+                elif operator == "/":
+                    return left / right
+                else:
+                    raise ValueError(f"Unimplemented operator: {operator}")
+            else:
+                raise ValueError(f"Invalid expression: {expression}")
+        else:
+            raise ValueError(f"Invalid expression: {expression}")
 
     def execute_read_statement(self, read_statement):
         variable_list = read_statement["variableList"]
@@ -64,27 +106,5 @@ class Interpreter:
         for expression in expression_list:
             value = self.evaluate_expression(expression)
             print(value)
-
-    def evaluate_expression(self, expression):
-        if expression["type"] == "NumericLiteral":
-            return expression["value"]
-
-        elif expression["type"] == "Identifier":
-            variable_name = expression["name"]
-            return self.global_variables[variable_name]
-
-        elif expression["type"] == "BinaryExpression":
-            left = self.evaluate_expression(expression["left"])
-            right = self.evaluate_expression(expression["right"])
-            operator = expression["operator"]
-
-            if operator == "+":
-                return left + right
-            elif operator == "-":
-                return left - right
-            elif operator == "*":
-                return left * right
-            else:
-                raise ValueError(f"Unsupported operator: {operator}")
 
 
