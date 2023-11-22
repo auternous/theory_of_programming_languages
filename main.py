@@ -6,7 +6,7 @@ from interpreter import Interpreter
 
 def main():
     input_string = ("VAR X, I: INTEGER;"
-                    " BEGIN X = 10;"
+                    " BEGIN READ(X);"
                     " I = 0;"
                     " FOR I TO 5 DO WRITE(I * X);"
                     " END_FOR"

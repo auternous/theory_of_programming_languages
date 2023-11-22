@@ -67,7 +67,7 @@ class Parser:
     def parse_read_statement(self):
         self.consume_token("READ")
         self.consume_token("LEFT_PAREN")
-        variable_list = self.parse_variable_list()
+        variable_list = self.parse_expression_list()
         self.consume_token("RIGHT_PAREN")
         self.consume_token("SEMICOLON")
         return {"type": "ReadStatement", "variableList": variable_list}

@@ -86,8 +86,8 @@ class Interpreter:
     def execute_read_statement(self, read_statement):
         variable_list = read_statement["variableList"]
         for variable in variable_list:
-            value = input(f"Enter value for {variable}: ")
-            self.global_variables[variable] = int(value)
+            value = input(f"Enter value for {variable['name']}: ")
+            self.global_variables[variable['name']] = int(value)
 
     def execute_for_statement(self, for_statement):
         loop_initializer = for_statement["loopInitializer"]
