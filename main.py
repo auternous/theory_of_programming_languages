@@ -5,7 +5,11 @@ from interpreter import Interpreter
 
 
 def main():
-    input_string = "VAR X, I: INTEGER; BEGIN X = 10; FOR I TO 5 DO WRITE(I * 2); END_FOR END"
+    input_string = ("VAR X, I: INTEGER;"
+                    " BEGIN X = 10;"
+                    " FOR I TO 5 DO WRITE(I * 2);"
+                    " END_FOR"
+                    " END")
 
     lexer = TokenLexer()
     lexer.reset_input(input_string)
