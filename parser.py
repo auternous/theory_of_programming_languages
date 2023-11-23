@@ -158,10 +158,15 @@ class Parser:
         return self.parse_numeric_literal()
 
     def parse_numeric_literal(self):
+        sign = 1  # Default sign is positive
+        while self.current_token["token_type"] == "ADDITIVE_OPERATOR" and self.current_token["value"] == "-":
+            self.consume_token("ADDITIVE_OPERATOR")
+            sign *= -1  # Flip the sign for each unary minus encountered
+
         number = self.consume_token("NUMBER")["value"]
         return {
             "type": "NumericLiteral",
-            "value": int(number),
+            "value": sign * int(number),
         }
 
     def parse_identifier(self):
@@ -191,6 +196,22 @@ class Parser:
             }
 
         return left
+
+    def parse_unary_expression(self):
+        operator = None
+
+        if self.current_token["token_type"] == "ADDITIVE_OPERATOR":
+            operator_token = self.consume_token("ADDITIVE_OPERATOR")
+            operator = operator_token["value"]
+
+        if operator is not None:
+            return {
+                "type": "UnaryExpression",
+                "operator": operator,
+                "argument": self.parse_unary_expression(),
+            }
+
+        return self.parse_primary_expression()
 
     def consume_token(self, expected_token_type):
         current_token = self.current_token

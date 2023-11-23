@@ -4,21 +4,17 @@ from pprint import pprint
 from interpreter import Interpreter
 
 
+
 def main():
-    input_string = ("VAR X, I: INTEGER;"
-                    " BEGIN READ(X);"
-                    " I = 0;"
-                    " FOR I TO 5 DO WRITE(I * X);"
-                    " END_FOR"
-                    " END")
+    input_string = ("VAR X, Y: INTEGER; BEGIN X = -13 + 26; Y = 13 + X; WRITE(Y); END")
 
     lexer = TokenLexer()
     lexer.reset_input(input_string)
 
-    print("Tokens:")
+    #print("Tokens:")
     token = lexer.fetch_next_token()
     while token is not None:
-        print(token)
+        #print(token)
         token = lexer.fetch_next_token()
 
     parser = Parser(lexer)
@@ -26,8 +22,10 @@ def main():
     parser.current_token = lexer.fetch_next_token()
 
     result = parser.parse_program()
-    print("\nParsed AST:")
-    print(result)
+    #print("\nParsed AST:")
+    #pprint(result)
+
+    print(input_string)
 
     print("\nOutput:")
 

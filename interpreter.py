@@ -63,6 +63,14 @@ class Interpreter:
                 value = self.evaluate_expression(expression["right"])
                 self.global_variables[variable_name] = value
                 return value
+            elif expression_type == "UnaryExpression":
+                operator = expression["operator"]
+                argument = self.evaluate_expression(expression["argument"])
+
+                if operator == "-":
+                    return -argument
+                else:
+                    raise ValueError(f"Unimplemented unary operator: {operator}")
             elif expression_type == "BinaryExpression":
                 operator = expression["operator"]
                 left = self.evaluate_expression(expression["left"])
