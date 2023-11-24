@@ -9,7 +9,27 @@ class Parser:
             statement = self.parse_statement()
             if statement:
                 program_body.append(statement)
+        if self.current_token is not None:
+            raise SyntaxError(f"Unexpected token after END => {self.current_token}")
         return {"type": "Program", "body": program_body}
+
+    def parse_block_statement(self):
+        self.consume_token("BEGIN")
+        statement_list = self.parse_statement_list("END")
+        self.consume_token("END")
+        if self.current_token is not None:
+            raise SyntaxError(f"Unexpected token after END => {self.current_token}")
+        return {"type": "BlockStatement", "body": statement_list}
+
+    def parse_statement_list(self, stop_tokens):
+        statement_list = []
+        while self.current_token["token_type"] not in stop_tokens and self.current_token["token_type"] is not None:
+            statement = self.parse_statement()
+            if statement:
+                statement_list.append(statement)
+        if self.current_token is not None and self.current_token["token_type"] not in stop_tokens:
+            raise SyntaxError(f"Unexpected token after END => {self.current_token}")
+        return statement_list
 
     def parse_statement(self):
         token_type = self.current_token["token_type"]
@@ -49,20 +69,6 @@ class Parser:
             else:
                 break
         return expression_list
-
-    def parse_block_statement(self):
-        self.consume_token("BEGIN")
-        statement_list = self.parse_statement_list("END")
-        self.consume_token("END")
-        return {"type": "BlockStatement", "body": statement_list}
-
-    def parse_statement_list(self, stop_token):
-        statement_list = []
-        while self.current_token["token_type"] != stop_token and self.current_token["token_type"] is not None:
-            statement = self.parse_statement()
-            if statement:
-                statement_list.append(statement)
-        return statement_list
 
     def parse_read_statement(self):
         self.consume_token("READ")

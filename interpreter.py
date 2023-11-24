@@ -83,7 +83,7 @@ class Interpreter:
                 elif operator == "*":
                     return left * right
                 elif operator == "/":
-                    return left / right
+                    return float(left) / right
                 else:
                     raise ValueError(f"Unimplemented operator: {operator}")
             else:
